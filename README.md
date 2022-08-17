@@ -194,6 +194,18 @@ select * from t limit @Y3，1；<br>
 **间隙锁是在可重复读隔离级别下才会生效的**<br>
 **间隙锁是左开右闭的**<br>
 
+第一个问题：能不能使用join语句？<br>
+如果可以使用Index Nested-Loop Join算法，也就是说可以用上被驱动表上的索引，其实是没问题的；<br>
+如果使用Block Nested-Loop Join算法，扫描行数就会过多。尤其是在大表上的join操作，这样可能要扫描被驱动表很多次，会占用大量的系统资源。所以这种join尽量不要用。<br>
+所以你在判断要不要使用join语句时，就是看explain结果里面，Extra字段里面有没有出现“Block Nested Loop”字样。<br>
+
+第二个问题是：如果要使用join，应该选择大表做驱动表还是选择小表做驱动表？<br>
+如果是Index Nested-Loop Join算法，应该选择小表做驱动表；<br>
+如果是Block Nested-Loop Join算法：<br>
+在join_buffer_size足够大的时候，是一样的；<br>
+在join_buffer_size不够大的时候（这种情况更常见），应该选择小表做驱动表。<br>
+所以，这个问题的结论就是，总是应该使用小表做驱动表。<br>
+
 
 
 
